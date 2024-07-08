@@ -5,6 +5,8 @@
 # A simple app that saves location and weather data into a SQLite database and displays it
 
 import sqlite3
+import urllib.request, urllib.parse, urllib.error
+import json
 
 # Create database
 dbconnnection = sqlite3.connect('weatherdb.sqlite'); # creates database on disk, in the directory from where this program is invoked.
@@ -53,11 +55,8 @@ INSERT INTO Weather_Status (Status) VALUES ("Mist");
 
 dbcursor.executescript('''
 INSERT INTO PLACE (Name, Country_id, Weather_status_id) VALUES ("Nacka", "1", "1");
-INSERT INTO PLACE (Name, Country_id, Weather_status_id) VALUES ("Sollentuna", "1", "2");
-INSERT INTO PLACE (Name, Country_id, Weather_status_id) VALUES ("Székesfehérvár", "3", "3");
-INSERT INTO PLACE (Name, Country_id, Weather_status_id) VALUES ("Csengersima", "4", "5");
 INSERT INTO PLACE (Name, Country_id, Weather_status_id) VALUES ("Karlsberg", "1", "6");
-INSERT INTO PLACE (Name, Country_id, Weather_status_id) VALUES ("Matricahely", "3", "1");
+INSERT INTO PLACE (Name, Country_id, Weather_status_id) VALUES ("Székesfehérvár", "3", "3");
 INSERT INTO PLACE (Name, Country_id, Weather_status_id) VALUES ("Baia Mare", "4", "1");
 INSERT INTO PLACE (Name, Country_id, Weather_status_id) VALUES ("Karlsruhe", "2", "2");
 ''')
@@ -75,9 +74,33 @@ for row in dbcursor.execute(selectstring):
         print(item, end='\t')
     print()
 
+print() # output spacer
+
 # TODO: Simple CMD interface to manually add to the DB the data that we wish
 
-# TODO: Retrieve weather data from OpenWeatherMap and add it to the database
+#   TODO: Retrieve weather data from OpenWeatherMap
+
+#   Get location through user input, e.g. "Kvevlax, Finland"
+
+#   Query OpenWeatherMap Geocoding API go get geographical coordinates
+
+#   Query One Call 3.0 API to get the weather data for the place
+#   (Placeholder first API request)
+request_string_weather = "https://api.openweathermap.org/data/3.0/onecall?lat={lat}&lon={lon}&exclude=minutely,hourly,daily,alerts&units=metric&appid={appid}".format(lat="XX.XXXXXXX", lon="XX.XXXXXXX", appid="XXXXXXXXXXXXXXXXXXXXXXXXXX")
+response = urllib.request.urlopen(request_string_weather) # read the whole API response # the returned object works like an "fhand"
+response_decoded = ""
+
+for line in response:
+    response_decoded += line.decode()
+
+weather_data = json.loads(response_decoded) # returns a dictionary
+
+print(weather_data["timezone"])
+print(weather_data["current"]["temp"], "degrees celsius")
+print(weather_data["current"]["weather"][0]["description"])
+
+# Add place and weather data to SQLite database in appropriate fashion
+
 
 # Program finishes
 dbcursor.close()

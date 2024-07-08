@@ -80,26 +80,45 @@ print() # output spacer
 
 #   TODO: Retrieve weather data from OpenWeatherMap
 
-#   Get location through user input, e.g. "Kvevlax, Finland"
+#   Get location name through user input, e.g. "Kvevlax, Finland"
 
-#   Query OpenWeatherMap Geocoding API go get geographical coordinates
+#   Query OpenWeatherMap Geocoding API to get geographical coordinates for the location
+#   TODO: Add code to URL ENCODE the plaintext location name, e.g. "Kvevlax, Finland" must become "Kvevlax,%20Finland"
+request_string_geocoding = "http://api.openweathermap.org/geo/1.0/direct?q={location_plaintext}&limit=1&appid={appid}".format(location_plaintext="Kvevlax,%20Finland", appid="XXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+geocoding_response = urllib.request.urlopen(request_string_geocoding) # read the whole API response # the returned object works like an "fhand"
+geocoding_response_decoded = ""
 
-#   Query One Call 3.0 API to get the weather data for the place
-#   (Placeholder first API request)
-request_string_weather = "https://api.openweathermap.org/data/3.0/onecall?lat={lat}&lon={lon}&exclude=minutely,hourly,daily,alerts&units=metric&appid={appid}".format(lat="XX.XXXXXXX", lon="XX.XXXXXXX", appid="XXXXXXXXXXXXXXXXXXXXXXXXXX")
-response = urllib.request.urlopen(request_string_weather) # read the whole API response # the returned object works like an "fhand"
-response_decoded = ""
+for line in geocoding_response:
+    geocoding_response_decoded += line.decode();
 
-for line in response:
-    response_decoded += line.decode()
+geocoding_data = json.loads(geocoding_response_decoded) # returns a dictionary
 
-weather_data = json.loads(response_decoded) # returns a dictionary
+print(geocoding_data[0]["name"])
+print(geocoding_data[0]["lat"])
+print(geocoding_data[0]["lon"])
+print(geocoding_data[0]["country"])
+
+lat = geocoding_data[0]["lat"]
+lon = geocoding_data[0]["lon"]
+
+print() # output spacer
+
+
+#   Query One Call 3.0 API to get the weather data for the location
+request_string_weather = "https://api.openweathermap.org/data/3.0/onecall?lat={lat}&lon={lon}&exclude=minutely,hourly,daily,alerts&units=metric&appid={appid}".format(lat=lat, lon=lon, appid="XXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+weather_response = urllib.request.urlopen(request_string_weather) # read the whole API response # the returned object works like an "fhand"
+weather_response_decoded = ""
+
+for line in weather_response:
+    weather_response_decoded += line.decode()
+
+weather_data = json.loads(weather_response_decoded) # returns a dictionary
 
 print(weather_data["timezone"])
 print(weather_data["current"]["temp"], "degrees celsius")
 print(weather_data["current"]["weather"][0]["description"])
 
-# Add place and weather data to SQLite database in appropriate fashion
+# Add location and weather data to SQLite database in appropriate fashion
 
 
 # Program finishes

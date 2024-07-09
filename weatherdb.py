@@ -8,6 +8,9 @@ import sqlite3
 import urllib.request, urllib.parse, urllib.error
 import json
 
+import credentials
+API_KEY = credentials.OpenWeatherMapCredentials()["APPID"]
+
 # Create database
 dbconnnection = sqlite3.connect('weatherdb.sqlite'); # creates database on disk, in the directory from where this program is invoked.
 dbcursor = dbconnnection.cursor()
@@ -88,7 +91,7 @@ print() # output spacer
 location_plaintext = "Kvevlax, Finland"
 location_urlencoded = urllib.parse.urlencode({'' : location_plaintext})[1:] # en fuling? Turns e.g. "=Kvevlax%2C+Finland" into just "Kvevlax%2C+Finland"
 
-request_string_geocoding = "http://api.openweathermap.org/geo/1.0/direct?q={location}&limit=1&appid={appid}".format(location=location_urlencoded, appid="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+request_string_geocoding = "http://api.openweathermap.org/geo/1.0/direct?q={location}&limit=1&appid={appid}".format(location=location_urlencoded, appid=API_KEY)
 geocoding_response = urllib.request.urlopen(request_string_geocoding) # read the whole API response # the returned object works like an "fhand"
 geocoding_response_decoded = ""
 
@@ -109,7 +112,7 @@ print() # output spacer
 
 
 #   Query One Call 3.0 API to get the weather data for the location
-request_string_weather = "https://api.openweathermap.org/data/3.0/onecall?lat={lat}&lon={lon}&exclude=minutely,hourly,daily,alerts&units=metric&appid={appid}".format(lat=lat, lon=lon, appid="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+request_string_weather = "https://api.openweathermap.org/data/3.0/onecall?lat={lat}&lon={lon}&exclude=minutely,hourly,daily,alerts&units=metric&appid={appid}".format(lat=lat, lon=lon, appid=API_KEY)
 weather_response = urllib.request.urlopen(request_string_weather) # read the whole API response # the returned object works like an "fhand"
 weather_response_decoded = ""
 

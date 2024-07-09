@@ -92,13 +92,9 @@ location_plaintext = "Kvevlax, Finland"
 location_urlencoded = urllib.parse.urlencode({'' : location_plaintext})[1:] # en fuling? Turns e.g. "=Kvevlax%2C+Finland" into just "Kvevlax%2C+Finland"
 
 request_string_geocoding = "http://api.openweathermap.org/geo/1.0/direct?q={location}&limit=1&appid={appid}".format(location=location_urlencoded, appid=API_KEY)
-geocoding_response = urllib.request.urlopen(request_string_geocoding) # read the whole API response # the returned object works like an "fhand"
-geocoding_response_decoded = ""
+geocoding_response = urllib.request.urlopen(request_string_geocoding).read().decode() # read the whole API response # the returned object works like an "fhand"
 
-for line in geocoding_response:
-    geocoding_response_decoded += line.decode();
-
-geocoding_data = json.loads(geocoding_response_decoded) # returns a dictionary
+geocoding_data = json.loads(geocoding_response) # returns a dictionary
 
 print(geocoding_data[0]["name"])
 print(geocoding_data[0]["lat"])
@@ -113,13 +109,9 @@ print() # output spacer
 
 #   Query One Call 3.0 API to get the weather data for the location
 request_string_weather = "https://api.openweathermap.org/data/3.0/onecall?lat={lat}&lon={lon}&exclude=minutely,hourly,daily,alerts&units=metric&appid={appid}".format(lat=lat, lon=lon, appid=API_KEY)
-weather_response = urllib.request.urlopen(request_string_weather) # read the whole API response # the returned object works like an "fhand"
-weather_response_decoded = ""
+weather_response = urllib.request.urlopen(request_string_weather).read().decode() # read the whole API response # the returned object works like an "fhand"
 
-for line in weather_response:
-    weather_response_decoded += line.decode()
-
-weather_data = json.loads(weather_response_decoded) # returns a dictionary
+weather_data = json.loads(weather_response) # returns a dictionary
 
 print(weather_data["timezone"])
 print(weather_data["current"]["temp"], "degrees celsius")

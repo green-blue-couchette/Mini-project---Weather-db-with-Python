@@ -43,7 +43,11 @@ while True:
             continue
 
         geocoding_data = json.loads(geocoding_response) # returns a dictionary
-
+        
+        if len(geocoding_data) == 0: # error checking, was the searched location found?
+            print("Error - Location not found, try again")
+            continue
+        
         print(geocoding_data[0]["name"]) # debug prints
         print(geocoding_data[0]["lat"])
         print(geocoding_data[0]["lon"])
@@ -65,6 +69,10 @@ while True:
             continue
 
         weather_data = json.loads(weather_response) # returns a dictionary
+        
+        if len(weather_data) == 0: # error checking, is there any weather data? (it's unlikely that it would be missing, but still...)
+            print("Error - Weather data not found")
+            continue
 
         print(weather_data["timezone"]) # debug prints
         print(weather_data["current"]["temp"], "degrees celsius")

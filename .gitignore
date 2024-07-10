@@ -1,5 +1,6 @@
-notes/*
+notes/
 *.sqlite
+*.old
 credentials.py
 README.md
 

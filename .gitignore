@@ -1,3 +1,7 @@
 notes/*
-weatherdb.sqlite
+*.sqlite
 credentials.py
+README.md
+
+# Byte-compiled / optimized / DLL files
+__pycache__/

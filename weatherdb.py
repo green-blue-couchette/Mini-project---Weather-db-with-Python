@@ -15,12 +15,78 @@ API_KEY = credentials.OpenWeatherMapCredentials()["APPID"]
 dbconnnection = sqlite3.connect('weatherdb.sqlite'); # creates database on disk, in the directory from where this program is invoked
 dbcursor = dbconnnection.cursor()
 
-# TODO: Simple CMD interface to manually add to the DB the data that we wish
-# Available input options:
+# Available input options for the CMD:
 # - A location name, e.g. "Kvevlax, Finland", to search a location and add or update its weather data in the database
 # - "#view" to display the database in its entirety
 # - "#clear" to clear the whole database
 # - "#quit" to quit the program
+
+
+### FUNCTION DEFINITIONS START
+
+def request_weather_data(location):
+
+    # This function returns a dictionary, i.e.
+    #       {
+    #       "success" : <boolean>,
+    #       "error_description" : <string>,
+    #       "geocoding_data" : <dictionary>, i.e. geocoding_data[0], (only if "success" : True)
+    #       "weather_data" : <dictionary>, i.e. weather_data, (only if "success" : True)
+    #       }
+
+    # URL encode the location's plaintext name (e.g. "Kvevlax, Finland" must become "Kvevlax%2C+Finland").
+    location_urlencoded = urllib.parse.urlencode({'' : location})[1:] # en fuling? Turns e.g. "=Kvevlax%2C+Finland" into just "Kvevlax%2C+Finland"
+
+    # Query OpenWeatherMap Geocoding API to get geographical coordinates for the location        
+    # Ask only for the very first match and assume that it is the correct location that the user wanted ("&limit=1")
+    request_string_geocoding = "http://api.openweathermap.org/geo/1.0/direct?q={location}&limit=1&appid={appid}".format(location=location_urlencoded, appid=API_KEY)
+
+    try:
+        geocoding_response = urllib.request.urlopen(request_string_geocoding).read().decode() # read the whole API response # the returned object works like an "fhand"
+    except Exception as err:
+        return {
+            "success" : False,
+            "error_description" : "Error - Could not retrieve geocoding data - " + str(err)
+            }
+
+    geocoding_data = json.loads(geocoding_response) # returns a dictionary
+    
+    if len(geocoding_data) == 0: # error checking, was the searched location found?
+        return {
+            "success" : False,
+            "error_description" : "Error - Could not find location, try again"
+            }
+
+    print() # output spacer
+
+    # Query the OpenWeatherMap One Call 3.0 API to get the weather data for the location
+    # 
+    request_string_weather = "https://api.openweathermap.org/data/3.0/onecall?lat={lat}&lon={lon}&exclude=minutely,hourly,daily,alerts&units=metric&appid={appid}".format(lat=geocoding_data[0]["lat"], lon=geocoding_data[0]["lon"], appid=API_KEY)
+
+    try:
+        weather_response = urllib.request.urlopen(request_string_weather).read().decode() # read the whole API response # the returned object works like an "fhand"
+    except Exception as err:
+        return {
+            "success" : False,
+            "error_description" : "Error - Could not retrieve weather data - " + str(err)
+            }
+
+    weather_data = json.loads(weather_response) # returns a dictionary
+    
+    if len(weather_data) == 0: # error checking, is there any weather data? (it's unlikely that it would be missing, but still...)
+        return {
+            "success" : False,
+            "error_description" : "Error - No weather data for the location (this is very unexpected!)"
+            }
+
+    return {
+        "success" : True,
+        "error_description" : "",
+        "geocoding_data" : geocoding_data[0],
+        "weather_data" : weather_data
+    }
+
+### FUNCTION DEFINITIONS END
 
 while True:
     inputline = input("> ")
@@ -29,54 +95,15 @@ while True:
 
     if not(inputline.startswith("#")): # If line doesn't start with a #, treat user's input as the plaintext name of the location that we must get the weather information for
 
-        # URL encode the location's plaintext name (e.g. "Kvevlax, Finland" must become "Kvevlax%2C+Finland").
-        location_urlencoded = urllib.parse.urlencode({'' : inputline})[1:] # en fuling? Turns e.g. "=Kvevlax%2C+Finland" into just "Kvevlax%2C+Finland"
-
-        # Query OpenWeatherMap Geocoding API to get geographical coordinates for the location        
-        # Ask only for the very first match and assume that it is the correct location that the user wanted ("&limit=1")
-        request_string_geocoding = "http://api.openweathermap.org/geo/1.0/direct?q={location}&limit=1&appid={appid}".format(location=location_urlencoded, appid=API_KEY)
-
-        try:
-            geocoding_response = urllib.request.urlopen(request_string_geocoding).read().decode() # read the whole API response # the returned object works like an "fhand"
-        except Exception as err:
-            print("Error while requesting geocoding data - ", err)
-            continue
-
-        geocoding_data = json.loads(geocoding_response) # returns a dictionary
+        open_weater_map_response = request_weather_data(inputline)
         
-        if len(geocoding_data) == 0: # error checking, was the searched location found?
-            print("Error - Location not found, try again")
-            continue
-        
-        print(geocoding_data[0]["name"]) # debug prints
-        print(geocoding_data[0]["lat"])
-        print(geocoding_data[0]["lon"])
-        print(geocoding_data[0]["country"])
-
-        lat = geocoding_data[0]["lat"]
-        lon = geocoding_data[0]["lon"]
-
-        print() # output spacer
-
-        # Query the OpenWeatherMap One Call 3.0 API to get the weather data for the location
-        # 
-        request_string_weather = "https://api.openweathermap.org/data/3.0/onecall?lat={lat}&lon={lon}&exclude=minutely,hourly,daily,alerts&units=metric&appid={appid}".format(lat=lat, lon=lon, appid=API_KEY)
-
-        try:
-            weather_response = urllib.request.urlopen(request_string_weather).read().decode() # read the whole API response # the returned object works like an "fhand"
-        except Exception as err:
-            print("Error while requesting weather data - ", err)
+        if open_weater_map_response["success"] == False: # error handling
+            print(open_weater_map_response["error_description"])
             continue
 
-        weather_data = json.loads(weather_response) # returns a dictionary
-        
-        if len(weather_data) == 0: # error checking, is there any weather data? (it's unlikely that it would be missing, but still...)
-            print("Error - Weather data not found")
-            continue
-
-        print(weather_data["timezone"]) # debug prints
-        print(weather_data["current"]["temp"], "degrees celsius")
-        print(weather_data["current"]["weather"][0]["description"])
+        # TODO grab the relevant location and weather data information and process it appropriately
+        print(open_weater_map_response["geocoding_data"]) # debug
+        print(open_weater_map_response["weather_data"]) # debug
 
         # TODO: Add location and weather data to SQLite database in appropriate fashion
 

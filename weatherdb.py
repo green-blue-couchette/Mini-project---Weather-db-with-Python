@@ -104,6 +104,29 @@ def insert_or_update_into_db(geo_weather_data):
 
     dbconnnection.commit()
 
+def get_db_entry(lat, on):
+    # Returns:
+    #   - The database entry for a place: <tuple> with order (place, country, timezone, degrees celsius, weather condition, lat, lon)
+
+    entry = dbcursor.execute(''' SELECT Places.name, Countries.name, Timezones.name, Places.temp, Weather_conditions.description, Places.lat, Places.lon
+                                FROM Places
+                                JOIN Countries on Places.country_id = Countries.id
+                                JOIN Weather_conditions on Places.weather_conditions_id = Weather_conditions.id
+                                JOIN Timezones on Places.timezone_id = Timezones.id
+                                WHERE (lat=? AND lon=?)
+                            ''', (lat, lon)
+                            ).fetchone()
+
+    return entry
+
+def print_db_entry(entry):
+    # Expected arguments:
+    #   - "entry": <tuple> containing an entry from the database, with order (place, country, timezone, degrees celsius, weather condition, lat, lon)
+    # Example printout: Kvevlax, FI (Europe/Helsinki): 21.1 °C, clear sky    (63.160..., 21.837...)
+    # Side-effects only - does not return anything
+    
+    print("{name}, {country} ({timezone}): {temp} °C, {weather}\t({lat}, {lon})".format(name=entry[0], country=entry[1], timezone=entry[2], temp=entry[3], weather=entry[4], lat=entry[5], lon=entry[6]))
+
 def request_weather_data(location):
 
     # This function returns a dictionary, i.e.
@@ -183,8 +206,11 @@ while True:
 
         insert_or_update_into_db(open_weater_map_response) # Take the location and weather data and insert it into the SQLite database appropriately
 
-        # TODO Function call to print out the most recently added place and its weather data
-
+        # Print out the database entry for the place that was just added to it
+        lat = open_weater_map_response["geocoding_data"]["lat"]
+        lon = open_weater_map_response["geocoding_data"]["lon"]
+        print_db_entry(get_db_entry(lat, lon))
+        
     else: # Treat user's input like a command and check against the defined commands for this program
         if inputline == "#view":
             # TODO

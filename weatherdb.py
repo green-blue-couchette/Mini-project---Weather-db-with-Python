@@ -17,9 +17,10 @@ dbcursor = dbconnnection.cursor()
 
 # Available input options for the CMD:
 # - A location name, e.g. "Kvevlax, Finland", to search a location and add or update its weather data in the database
-# - "#view" to display the database in its entirety
-# - "#clear" to clear the whole database
-# - "#quit" to quit the program
+# - #help   displays a banner with some help text
+# - #view   displays all entries in the database
+# - #clear  clears the database and rebuilds it structure from scratch (useful if the database was corrupted for whatever reason)
+# - #quit   closes this program
 
 
 ### FUNCTION DEFINITIONS START
@@ -206,7 +207,25 @@ def request_weather_data(location):
         "weather_data" : weather_data
     }
 
+def print_help_banner():
+    # Prints a help banner with the available commands of this program
+    # Side-effects only - does not return anything
+    print("This Python 3 program searches for a location using OpenWeatherMap and saves its weather data to an SQLite database.")
+    print()    
+    print("Usage: Type in a location name to get its current weather information.")
+    print("This information is automatically saved to a database on your computer and persists until the next time you run weatherdb.py.")
+    print()
+    print("Other commands:")
+    print("- #help \t displays a banner with this help text")
+    print("- #view \t displays all location and weather entries in the database")
+    print("- #clear \t clears the database and rebuilds it structure from scratch (useful if the database was corrupted for whatever reason)")
+    print("- #quit \t closes this program")
+
 ### FUNCTION DEFINITIONS END
+
+
+
+print_help_banner()
 
 while True:
     inputline = input("> ")
@@ -229,7 +248,10 @@ while True:
         print_db_entry(get_db_entry(lat, lon))
         
     else: # Treat user's input like a command and check against the defined commands for this program
-        if inputline == "#view":
+        if inputline == "#help":
+            print_help_banner()
+
+        elif inputline == "#view":
             print_db_all_entries()
 
         elif inputline == "#clear":
@@ -244,7 +266,7 @@ while True:
             break
 
         else:
-            print("Invalid command")
+            print("Invalid command. Try #help.")
 
 # Program finishes
 # TODO: Commit all data to the database before quitting

@@ -8,6 +8,9 @@ A small command-line program that lets you search for a location, e.g. `Kvevlax,
 Download the `weatherdb.py` and `credentials.py` scripts to your machine.\
 Run it using `python3 weatherdb.py` or `./weatherdb.py`. Make sure you fill the credentials file with your own OpenWeatherMap API key first.
 
+If this is the first time you run `weatherdb.py`, enter the command `#clear` at the prompt to create the `.sqlite` database. Otherwise, you will get an error.
+
+
 ## Libraries and tools used
 Python 3 for the programming language,\
 Visual Studio Code for writing the code,\

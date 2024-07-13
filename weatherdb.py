@@ -24,6 +24,51 @@ dbcursor = dbconnnection.cursor()
 
 ### FUNCTION DEFINITIONS START
 
+def init_db():
+    # Initializes database by destroying it and rebuilding its structure from scratch
+    # Side-effects only - does not return anything
+
+    dbcursor.executescript('''
+        DROP TABLE IF EXISTS "Places";
+        DROP TABLE IF EXISTS "Countries";
+        DROP TABLE IF EXISTS "Timezones";
+        DROP TABLE IF EXISTS "Weather_conditions";
+
+        CREATE TABLE "Places" (
+        "id"	INTEGER NOT NULL UNIQUE,
+        "name"	TEXT NOT NULL,
+        "lat"	REAL NOT NULL,
+        "lon"	REAL NOT NULL,
+        "temp"	REAL NOT NULL,
+        "country_id"	INTEGER NOT NULL,
+        "timezone_id"	INTEGER NOT NULL,
+        "weather_conditions_id"	INTEGER NOT NULL,
+        PRIMARY KEY("id" AUTOINCREMENT),
+        FOREIGN KEY("country_id") REFERENCES "Countries"("id"),
+        FOREIGN KEY("timezone_id") REFERENCES "Timezones"("id"),
+        FOREIGN KEY("weather_conditions_id") REFERENCES "Weather_conditions"("id"),
+        UNIQUE("lat","lon") ON CONFLICT REPLACE
+        );
+
+        CREATE TABLE "Countries" (
+            "id"	INTEGER NOT NULL UNIQUE,
+            "name"	TEXT NOT NULL UNIQUE,
+            PRIMARY KEY("id" AUTOINCREMENT)
+        );
+
+        CREATE TABLE "Timezones" (
+            "id"	INTEGER NOT NULL UNIQUE,
+            "name"	TEXT NOT NULL UNIQUE,
+            PRIMARY KEY("id" AUTOINCREMENT)
+        );
+
+        CREATE TABLE "Weather_conditions" (
+            "id"	INTEGER NOT NULL UNIQUE,
+            "description"	TEXT NOT NULL UNIQUE,
+            PRIMARY KEY("id" AUTOINCREMENT)
+        );
+    ''')
+
 def request_weather_data(location):
 
     # This function returns a dictionary, i.e.

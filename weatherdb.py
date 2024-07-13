@@ -158,8 +158,12 @@ while True:
             print("Not yet implemented - VIEW DATABASE")
 
         elif inputline == "#clear":
-            # TODO
-            print("Not yet implemented - CLEAR DATABASE")
+            
+            choice = input("This will clear the database and rebuild its structure from scratch. Continue? (y/N) > ")
+            
+            if choice.lower().strip() == "y":
+                init_db()
+                print("Cleared and rebuilt the database.")
             
         elif inputline == "#quit":
             break

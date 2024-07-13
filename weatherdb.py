@@ -127,6 +127,23 @@ def print_db_entry(entry):
     
     print("{name}, {country} ({timezone}): {temp} °C, {weather}\t({lat}, {lon})".format(name=entry[0], country=entry[1], timezone=entry[2], temp=entry[3], weather=entry[4], lat=entry[5], lon=entry[6]))
 
+def print_db_all_entries():
+    # Side-effects only - does not return anything
+    
+    # Get all database entries
+    entries = dbcursor.execute(''' SELECT Places.name, Countries.name, Timezones.name, Places.temp, Weather_conditions.description, Places.lat, Places.lon FROM Places
+                                JOIN Countries on Places.country_id = Countries.id
+                                JOIN Weather_conditions on Places.weather_conditions_id = Weather_conditions.id
+                                JOIN Timezones on Places.timezone_id = Timezones.id
+                                '''
+                            ).fetchall() # an array of tuples
+
+    # Print the entries one by one
+    print("Entries:", len(entries))
+
+    for entry in entries:
+        print_db_entry(entry)
+
 def request_weather_data(location):
 
     # This function returns a dictionary, i.e.
@@ -213,8 +230,7 @@ while True:
         
     else: # Treat user's input like a command and check against the defined commands for this program
         if inputline == "#view":
-            # TODO
-            print("Not yet implemented - VIEW DATABASE")
+            print_db_all_entries()
 
         elif inputline == "#clear":
             

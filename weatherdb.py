@@ -69,6 +69,41 @@ def init_db():
         );
     ''')
 
+def insert_or_update_into_db(geo_weather_data):
+    # Inserts the retrieved geograhical and weather data for a place into the SQLite database
+    # Side-effects only - does not return anything
+
+    geocoding_data = geo_weather_data["geocoding_data"]
+    weather_data = geo_weather_data["weather_data"]
+
+    dbcursor.execute(''' INSERT OR IGNORE INTO Countries (name) VALUES (?) ''', (geocoding_data["country"], ))
+    countries_foreign_key_id = dbcursor.execute(''' SELECT id FROM Countries WHERE name=? ''', (geocoding_data["country"], )).fetchone()[0]
+    # print("Countries foreign key id:", countries_foreign_key_id) # debug
+
+    dbcursor.execute(''' INSERT OR IGNORE INTO Timezones (name) VALUES (?) ''', (weather_data["timezone"], ))
+    timezones_foreign_key_id = dbcursor.execute(''' SELECT id FROM Timezones WHERE name=? ''', (weather_data["timezone"], )).fetchone()[0]
+    # print("Timezones foreign key id", timezones_foreign_key_id) # debug
+
+    dbcursor.execute(''' INSERT OR IGNORE INTO Weather_conditions (description) VALUES (?) ''', (weather_data["current"]["weather"][0]["description"],))
+    
+    weather_conditions_foreign_key_id = dbcursor.execute(''' SELECT id FROM Weather_conditions WHERE description=? ''', (weather_data["current"]["weather"][0]["description"], )).fetchone()[0]
+    # print("Weather conditions foreign key id", weather_conditions_foreign_key_id) # debug
+
+    dbcursor.execute(''' INSERT INTO Places (name, temp, country_id, timezone_id, weather_conditions_id, lat, lon)
+                                     VALUES (?, ?, ?, ?, ?, ?, ?) ''',
+                                     (geocoding_data["name"],
+                                     weather_data["current"]["temp"],
+                                     countries_foreign_key_id,
+                                     timezones_foreign_key_id,
+                                     weather_conditions_foreign_key_id,
+                                     geocoding_data["lat"],
+                                     geocoding_data["lon"])) # UNIQUE("lat","lon") ON CONFLICT REPLACE - takes care if there is new weather data for the same place
+    
+    # place_id = dbcursor.execute(''' SELECT id FROM Places WHERE (lat=? AND lon=?) ''', (geocoding_data["lat"], geocoding_data["lon"])).fetchone()[0]
+    # print("Place id", place_id) # debug
+
+    dbconnnection.commit()
+
 def request_weather_data(location):
 
     # This function returns a dictionary, i.e.
@@ -146,11 +181,9 @@ while True:
             print(open_weater_map_response["error_description"])
             continue
 
-        # TODO grab the relevant location and weather data information and process it appropriately
-        print(open_weater_map_response["geocoding_data"]) # debug
-        print(open_weater_map_response["weather_data"]) # debug
+        insert_or_update_into_db(open_weater_map_response) # Take the location and weather data and insert it into the SQLite database appropriately
 
-        # TODO: Add location and weather data to SQLite database in appropriate fashion
+        # TODO Function call to print out the most recently added place and its weather data
 
     else: # Treat user's input like a command and check against the defined commands for this program
         if inputline == "#view":
